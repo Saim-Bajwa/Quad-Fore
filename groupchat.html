@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group Chat</title>
+  <style>
+    body {
+      background-color: #343541;
+      color: #dcdcdc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    #chat {
+      width: 100%;
+      max-width: 600px;
+      background-color: #40414F;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    #messages {
+      height: 300px;
+      overflow-y: auto;
+      background-color: #3c3c4f;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    #messages div {
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      background-color: #4a4a5c;
+      position: relative;
+    }
+    .delete-button {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #dcdcdc;
+      cursor: pointer;
+    }
+    #new-message-container {
+      display: flex;
+      align-items: center;
+    }
+    #new-message {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      margin-right: 10px;
+      background-color: #3c3c4f;
+      color: #dcdcdc;
+    }
+    #send-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #dcdcdc;
+      font-size: 24px;
+    }
+  </style>
+  <!-- Add Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  <!-- Boxicons CSS -->
+  <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+
+<div id="chat">
+<h1>Chat</h1>
+  <div id="messages"></div>
+  <div id="new-message-container">
+    <input type="text" id="new-message" placeholder="Type a message...">
+    <button id="send-button"><i class='bx bxs-send'></i></button>
+  </div>
+</div>
+
+<script>
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDjeaIxebqqepCqRllnkhACGDf_xs2RPjU",
+    authDomain: "quad-fore.firebaseapp.com",
+    projectId: "quad-fore",
+    storageBucket: "quad-fore.appspot.com",
+    messagingSenderId: "22498445974",
+    appId: "1:22498445974:web:2570f5b97a13beacc550b7"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  // Generate or retrieve a unique identifier for the user
+  function getUniqueId() {
+    let uniqueId = localStorage.getItem('uniqueId');
+    if (!uniqueId) {
+      uniqueId = 'user-' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('uniqueId', uniqueId);
+    }
+    return uniqueId;
+  }
+
+  const userId = getUniqueId();
+
+  // Elements
+  const messagesDiv = document.getElementById('messages');
+  const newMessageInput = document.getElementById('new-message');
+  const sendButton = document.getElementById('send-button');
+
+  // Load existing messages and listen for new ones
+  database.ref('messages').on('child_added', function(snapshot) {
+    const messageData = snapshot.val();
+    const messageId = snapshot.key;
+    const messageElement = document.createElement('div');
+    messageElement.textContent = `${messageData.userId}: ${messageData.message}`;
+    messageElement.setAttribute('data-id', messageId);
+    if (messageData.userId === userId) {
+      const deleteButton = document.createElement('button');
+      deleteButton.innerHTML = 'Delete';
+      deleteButton.classList.add('delete-button');
+      deleteButton.onclick = function() {
+        database.ref('messages').child(messageId).remove();
+      };
+      messageElement.appendChild(deleteButton);
+    }
+    messagesDiv.appendChild(messageElement);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+
+  // Listen for removed messages
+  database.ref('messages').on('child_removed', function(snapshot) {
+    const messageId = snapshot.key;
+    const messageElement = document.querySelector(`[data-id="${messageId}"]`);
+    if (messageElement) {
+      messageElement.remove();
+    }
+  });
+
+  // Send a new message
+  sendButton.addEventListener('click', function() {
+    const message = newMessageInput.value;
+    if (message.trim() !== '') {
+      database.ref('messages').push({
+        userId: userId,
+        message: message
+      });
+      newMessageInput.value = '';
+    }
+  });
+
+  // Allow pressing "Enter" to send the message
+  newMessageInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      sendButton.click();
+    }
+  });
+</script>
+
+</body>
+</html>

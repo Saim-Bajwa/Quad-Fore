@@ -105,7 +105,7 @@
   function getUniqueId() {
     let uniqueId = localStorage.getItem('uniqueId');
     if (!uniqueId) {
-      uniqueId = 'user-' + btoa(navigator.userAgent + Date.now()).substr(0, 12);
+      uniqueId = 'user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
       localStorage.setItem('uniqueId', uniqueId);
     }
     return uniqueId;

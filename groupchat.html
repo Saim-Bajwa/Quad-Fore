@@ -78,7 +78,7 @@
 <body>
 
 <div id="chat">
-<h1>Chat</h1>
+  <h1>Chat</h1>
   <div id="messages"></div>
   <div id="new-message-container">
     <input type="text" id="new-message" placeholder="Type a message...">
@@ -105,7 +105,7 @@
   function getUniqueId() {
     let uniqueId = localStorage.getItem('uniqueId');
     if (!uniqueId) {
-      uniqueId = 'user-' + Math.random().toString(36).substr(2, 9);
+      uniqueId = 'user-' + btoa(navigator.userAgent + Date.now()).substr(0, 12);
       localStorage.setItem('uniqueId', uniqueId);
     }
     return uniqueId;
